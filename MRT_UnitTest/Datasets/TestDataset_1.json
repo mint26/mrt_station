@@ -1,0 +1,34 @@
+﻿{
+    "StationCodeMapping" :  {
+        "NS1": "Jurong East",
+        "NS2": "Bukit Batok",
+        "NS3": "Bukit Gombak",
+        "NS4": "Choa Chu Kang"
+    }, 
+    "Stations" :  {
+        "Jurong East":  {
+            "StationCode":  "NS1", 
+            "StationName":  "Jurong East",
+            "CommencementDate": "2019-01-01T00:00:00-07:00", 
+            "IsInterchange" :  false
+        },
+        "Bukit Batok": {
+            "StationCode": "NS2",
+            "StationName": "Bukit Batok",
+            "CommencementDate": "2019-01-01T00:00:00-07:00",
+            "IsInterchange": false
+        },
+        "Bukit Gombak": {
+            "StationCode": "NS3",
+            "StationName": "Bukit Gombak",
+            "CommencementDate": "2019-01-01T00:00:00-07:00",
+            "IsInterchange": false
+        },
+        "Choa Chu Kang": {
+            "StationCode": "NS4",
+            "StationName": "Choa Chu Kang",
+            "CommencementDate": "2019-01-01T00:00:00-07:00",
+            "IsInterchange": false
+        }
+    }
+}

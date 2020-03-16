@@ -3,40 +3,51 @@ using System.Collections.Generic;
 
 namespace MRT.Models
 {
-    public class Route
+    public class Route: ICloneable
     {
-        private IList<Station> Stations;
-        private int TotalDuration; 
         public Route()
         {
             this.TotalDuration = 0;
-            this.Stations = new List<Station>(); 
+            this.LastStation = new RouteStation(); 
         }
 
-        public void AddStation(Station station) {
-            this.Stations.Add(station); 
-        }
+        public RouteStation LastStation { get; set; }
+        public int TotalDuration { get; set; }
 
-        public IList<Station> GetStations()
-        {
-            return this.Stations; 
-        }
+        public void AddStationToRoute(Station station) {
 
-        public void SetStations(IList<Station> stations) {
-            this.Stations = stations; 
+            RouteStation newRouteStation = new RouteStation(station); 
+            if (this.LastStation == null) {
+                this.LastStation = newRouteStation;
+                return; 
+            }
+            if (this.LastStation.Station != null) {
+                this.LastStation.NextStation = newRouteStation;
+                newRouteStation.PrevStation = this.LastStation; 
+                this.LastStation = newRouteStation; 
+            } 
         }
 
         public void AddTotalDuration(int duration) {
             this.TotalDuration += duration; 
         }
 
-        public int GetTotalDuration() {
-            return this.TotalDuration; 
+        public virtual object Clone()
+        {
+            return this.CloneObject();
         }
 
-        public void SetTotalDuration(int totalDuration)
-        {
-            this.TotalDuration = totalDuration;
+    }
+
+    public class RouteStation {
+        public RouteStation() { }
+        public RouteStation(Station station) {
+            this.Station = station;
+            this.NextStation = null; 
         }
+
+        public Station Station { get; set; }
+        public RouteStation NextStation { get; set; }
+        public RouteStation PrevStation { get; set; }
     }
 }

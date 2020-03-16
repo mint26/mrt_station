@@ -4,11 +4,11 @@ namespace MRT.Models
 {
     public class Station
     {
-        private string StationCode { get; set; }
-        private string StationName { get; set; }
-        private bool IsInterchange { get; set; }
-        private DateTime CommencementDate { get; set; }
-        private IList<StationEdge> ConnectedStations { get; set; }
+        public string StationCode { get; set; }
+        public string StationName { get; set; }
+        public bool IsInterchange { get; set; }
+        public DateTime CommencementDate { get; set; }
+        public IList<StationEdge> ConnectedStations { get; set; }
         
         public Station(){}
 
@@ -28,19 +28,6 @@ namespace MRT.Models
 
         public void SetIsInterchange() {
             this.IsInterchange = true; 
-        }
-
-        public bool GetIsInterchange()
-        {
-            return this.IsInterchange;
-        }
-
-        public IList<StationEdge> GetConnectedStations() {
-            return this.ConnectedStations?? null; 
-        }
-
-        public string GetStationName() {
-            return this.StationName;
         }
 
         public string GetMrtLine() {

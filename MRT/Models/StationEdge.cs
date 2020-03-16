@@ -3,8 +3,8 @@ namespace MRT.Models
 {
     public class StationEdge
     {
-        private Station Station { get; set; }
-        private int Duration { get; set; }
+        public Station Station { get; set; }
+        public int Duration { get; set; }
 
         public StationEdge()
         {
@@ -13,14 +13,6 @@ namespace MRT.Models
         public StationEdge(Station station, int duration) {
             this.Station = station;
             this.Duration = duration; 
-        }
-
-        public Station GetStation() {
-            return this.Station; 
-        }
-
-        public int GetDuration() {
-            return this.Duration; 
         }
     }
 }

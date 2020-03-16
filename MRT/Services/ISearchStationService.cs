@@ -13,8 +13,8 @@ namespace MRT.Services
 
     public class RouteDTO
     {
-        string StationCode { get; set; }
-        string StationName { get; set; }
+        IList<string> Instructions;
+        int TotalDurations; 
     }
 
     public class SearchStationService: ISearchStationService
@@ -113,14 +113,22 @@ namespace MRT.Services
             //sort the route with shortest time
             ((List<Route>)possibleRoutes).Sort((Route x, Route y) => x.GetTotalDuration() - y.GetTotalDuration());
 
-            //format to routeDto
-
 
             IList<RouteDTO> routeDTOs = new List<RouteDTO>();
-            
-            //Convert data representation routes to natural language
+            //format to routeDto
+            for (int i = 0; i < 3; i++)
+            {
+                routeDTOs.Add(FormatRouteToRouteDTO(possibleRoutes[i]));
+            }
 
             return routeDTOs; 
+        }
+
+        public RouteDTO FormatRouteToRouteDTO(Route route) {
+            RouteDTO routeDTO = new RouteDTO();
+
+
+            return routeDTO; 
         }
 
         public void ImportDataset(string filepath,DateTime atDate) {

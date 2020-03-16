@@ -30,12 +30,21 @@ namespace MRT.Models
             this.IsInterchange = true; 
         }
 
+        public bool GetIsInterchange()
+        {
+            return this.IsInterchange;
+        }
+
         public IList<StationEdge> GetConnectedStations() {
             return this.ConnectedStations?? null; 
         }
 
         public string GetStationName() {
             return this.StationName;
+        }
+
+        public string GetMrtLine() {
+            return this.StationCode.Substring(0, 2); 
         }
     }
 }

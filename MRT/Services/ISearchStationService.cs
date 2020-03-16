@@ -23,6 +23,8 @@ namespace MRT.Services
         private Dictionary<string, string> _stationCodeMapping;
 
         private const string FILEPATH = "./Datasets/StationMap.csv";
+        private const int MAX_NUM_RESULT = 3;
+        private Route lastMaxRoute = null; 
 
         public SearchStationService()
         {
@@ -53,7 +55,9 @@ namespace MRT.Services
 
         public IList<Route> FindRoutes(string sourceStationName, string destStationName) {
             IList<Route> possibleRoutes = new List<Route>();
-            FindRouteHelper(sourceStationName, destStationName, possibleRoutes, new Route()); 
+            Route route = new Route();
+            route.AddStation(Stations[sourceStationName]);
+            FindRouteHelper(sourceStationName, destStationName, possibleRoutes, route); 
             return possibleRoutes; 
         }
 
@@ -61,19 +65,24 @@ namespace MRT.Services
            IList<Route> possibleRoutes, Route route) {
 
             if (!Stations.ContainsKey(sourceStationName)) throw new Exception();
-            
+
             Station curStation = Stations[sourceStationName];
 
             if (curStation.GetStationName() == destStationName)
             {
-                IList<Station> stations = route.GetStations(); 
+                //if (lastMaxRoute == null || lastMaxRoute.GetTotalDuration() > route.GetTotalDuration())
+                //{
+                IList<Station> stations = route.GetStations();
+
                 Station[] routeAr = new Station[stations.Count];
-                stations.CopyTo(routeAr,0);
+                stations.CopyTo(routeAr, 0);
+
                 List<Station> newStationList = new List<Station>();
                 newStationList.AddRange(routeAr);
+
                 Route validRoute = new Route();
                 validRoute.SetStations(newStationList);
-                validRoute.SetTotalDuration(route.GetTotalDuration()); 
+                validRoute.SetTotalDuration(route.GetTotalDuration());
                 possibleRoutes.Add(validRoute);
                 return; 
             }
@@ -89,6 +98,7 @@ namespace MRT.Services
                         route.AddStation(nextStation);
                         route.AddTotalDuration(stationEdge.GetDuration());
                         FindRouteHelper(nextStation.GetStationName(), destStationName, possibleRoutes, route);
+                        route.AddTotalDuration(-stationEdge.GetDuration());
                         route.GetStations().Remove(nextStation);
                     }
                 }
@@ -100,13 +110,14 @@ namespace MRT.Services
             if (possibleRoutes == null || possibleRoutes.Count == 0) {
                 return null; 
             }
-
             //sort the route with shortest time
-            ((List<Route>)possibleRoutes).Sort((Route x,Route y) => x.GetTotalDuration() - y.GetTotalDuration()); 
-         
-            //format to routeDto
-            IList<RouteDTO> routeDTOs = new List<RouteDTO>();
+            ((List<Route>)possibleRoutes).Sort((Route x, Route y) => x.GetTotalDuration() - y.GetTotalDuration());
 
+            //format to routeDto
+
+
+            IList<RouteDTO> routeDTOs = new List<RouteDTO>();
+            
             //Convert data representation routes to natural language
 
             return routeDTOs; 
@@ -120,20 +131,22 @@ namespace MRT.Services
             {
                 String line = sr.ReadLine();
 
-                Station prevStation = null; 
+                Station prevStation = null;
+                string prevStationLine = ""; 
                 while ((line = sr.ReadLine()) != null)
                 {
                     string[] parts = line.Split(',');
                     string stationCode = parts[0];
                     string stationName = parts[1];
+                    string stationLine = stationCode.Substring(0, 2);
                     DateTime commencementDate = DateTime.Parse(parts[2]);
                     if (commencementDate <= atDate)
                     {
                         if (!StationCodeMapping.ContainsKey(stationCode)) {
-                            StationCodeMapping.Add(stationCode, stationName); 
+                            StationCodeMapping.Add(stationCode, stationName);
                         }
 
-                        Station station; 
+                        Station station;
                         if (!Stations.ContainsKey(stationName))
                         {
                             station = new Station(stationCode, stationName, commencementDate);
@@ -141,15 +154,27 @@ namespace MRT.Services
                         }
                         else {
                             station = Stations[stationName];
-                            station.SetIsInterchange(); 
+                            station.SetIsInterchange();
                         }
 
-                        if(prevStation != null) {
+                        if (prevStation != null && (prevStationLine == "" || prevStationLine == stationLine)) {
                             //TODO: make the weight different
-                            StationEdge stationEdge = new StationEdge(station, 5);
-                            prevStation.AddConnectedStations(stationEdge);
+                            StationEdge prevStationEdge = new StationEdge(station, 5);
+                            prevStation.AddConnectedStations(prevStationEdge);
+
+                            StationEdge curStationEdge = new StationEdge(prevStation, 5);
+                            station.AddConnectedStations(curStationEdge);
                         }
+
+                        if (prevStation != null && prevStationLine != "" && prevStationLine != stationLine) {
+                            prevStation = null;
+                            prevStationLine = "";
+                            continue; 
+                        }
+
                         prevStation = station;
+                        prevStationLine = stationLine; 
+
                     }
                 }
             }

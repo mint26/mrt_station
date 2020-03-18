@@ -8,7 +8,7 @@ namespace MRT.Models
         public Route()
         {
             this.TotalDuration = 0;
-            this.LastStation = new RouteStation(); 
+            this.LastStation = null;
         }
 
         public RouteStation LastStation { get; set; }
@@ -16,7 +16,8 @@ namespace MRT.Models
 
         public void AddStationToRoute(Station station) {
 
-            RouteStation newRouteStation = new RouteStation(station); 
+            RouteStation newRouteStation = new RouteStation(station);
+
             if (this.LastStation == null) {
                 this.LastStation = newRouteStation;
                 return; 
@@ -34,7 +35,16 @@ namespace MRT.Models
 
         public virtual object Clone()
         {
-            return this.CloneObject();
+            return new Route()
+            {
+                LastStation = new RouteStation {
+                    NextStation = this.LastStation.NextStation,
+                    PrevStation = this.LastStation.PrevStation,
+                    Station = this.LastStation.Station, 
+                },
+                TotalDuration = this.TotalDuration,
+                
+            };
         }
 
     }

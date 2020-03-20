@@ -101,18 +101,19 @@ namespace MRT.Services
                     if (!visitedStationName.Contains(connectedStation.StationName))
                     {
                         stationQueue.Enqueue(connectedStation);
-                        updatedRoutes.AddRange(SpawnRoute(possibleRoutes, curStation.StationName, connectedStation, stationEdge.Duration));
+                        updatedRoutes.AddRange(SpawnMatchedRoute(possibleRoutes, curStation.StationName, connectedStation, stationEdge.Duration));
                     }
                 }
 
                 if (updatedRoutes.Count > 0) {
+                    updatedRoutes.AddRange(SpawnMismatchedRoute(possibleRoutes, curStation.StationName));
                     possibleRoutes = updatedRoutes;
                 }
             }
             return kRoutes; 
         }
 
-        public IList<Route> SpawnRoute(IList<Route> possibleRoutes, string prevStationName, Station stationToAdd, int duration) {
+        public IList<Route> SpawnMatchedRoute(IList<Route> possibleRoutes, string prevStationName, Station stationToAdd, int duration) {
             IList<Route> newRoutes = new List<Route>();
 
             foreach (Route route in possibleRoutes) {
@@ -123,89 +124,49 @@ namespace MRT.Services
                     updatedRoute.AddTotalDuration(duration);
                     newRoutes.Add(updatedRoute);
                 }
-                else {
-                    newRoutes.Add(route); 
-                }
-                
             }
 
             return newRoutes; 
+        }
+
+        public IList<Route> SpawnMismatchedRoute(IList<Route> possibleRoutes, string prevStationName)
+        {
+            IList<Route> newRoutes = new List<Route>();
+
+            foreach (Route route in possibleRoutes)
+            {
+                if (route.LastStation.Station.StationName != prevStationName)
+                {
+                    newRoutes.Add(route);
+                }
+            }
+
+            return newRoutes;
         }
 
         public IList<Route> SpawnValidRoute(IList<Route> possibleRoutes, string lastStationName, Station finalStation, int duration)
         {
             IList<Route> validRoutes = new List<Route>();
 
-            foreach (Route route in possibleRoutes) {
-                if (route.LastStation.Station.StationName == lastStationName) {
+            foreach (Route route in possibleRoutes)
+            {
+                if (route.LastStation.Station.StationName == lastStationName)
+                {
                     ///Route updatedRoute = (Route)route.Clone();
                     route.AddStationToRoute(finalStation);
                     route.AddTotalDuration(duration);
                     validRoutes.Add(route);
                 }
             }
-            return validRoutes; 
+            return validRoutes;
         }
-
-        //public IList<Route> FindRoutes(string sourceStationName, string destStationName) {
-        //    IList<Route> possibleRoutes = new List<Route>();
-        //    Route route = new Route();
-        //    route.AddStation(Stations[sourceStationName]);
-        //    FindRouteHelper(sourceStationName, destStationName, possibleRoutes, route); 
-        //    return possibleRoutes; 
-        //}
-
-        //public void FindRouteHelper(string sourceStationName, string destStationName,
-        //   IList<Route> possibleRoutes, Route route) {
-
-        //    if (!Stations.ContainsKey(sourceStationName)) throw new Exception();
-
-        //    Station curStation = Stations[sourceStationName];
-
-        //    if (curStation.GetStationName() == destStationName)
-        //    {
-        //        //if (lastMaxRoute == null || lastMaxRoute.GetTotalDuration() > route.GetTotalDuration())
-        //        //{
-        //        IList<Station> stations = route.GetStations();
-
-        //        Station[] routeAr = new Station[stations.Count];
-        //        stations.CopyTo(routeAr, 0);
-
-        //        List<Station> newStationList = new List<Station>();
-        //        newStationList.AddRange(routeAr);
-
-        //        Route validRoute = new Route();
-        //        validRoute.SetStations(newStationList);
-        //        validRoute.SetTotalDuration(route.GetTotalDuration());
-        //        possibleRoutes.Add(validRoute);
-        //        return; 
-        //    }
-
-        //    IList<StationEdge> connectedStations = curStation.GetConnectedStations();
-        //    if (connectedStations != null)
-        //    {
-        //        foreach (StationEdge stationEdge in connectedStations)
-        //        {
-        //            Station nextStation = stationEdge.GetStation();
-        //            if (!route.GetStations().Contains(nextStation))
-        //            {
-        //                route.AddStation(nextStation);
-        //                route.AddTotalDuration(stationEdge.GetDuration());
-        //                FindRouteHelper(nextStation.GetStationName(), destStationName, possibleRoutes, route);
-        //                route.AddTotalDuration(-stationEdge.GetDuration());
-        //                route.GetStations().Remove(nextStation);
-        //            }
-        //        }
-        //    }
-        //}
             
-        
         public IList<RouteDTO> FormatRoutes(IList<Route> possibleRoutes) {
             if (possibleRoutes == null || possibleRoutes.Count == 0) {
                 return null; 
             }
             IList<RouteDTO> routeDTOs = new List<RouteDTO>();
-            foreach (var route in possibleRoutes)
+            foreach (Route route in possibleRoutes)
             {
                 RouteDTO routeDto = new RouteDTO();
                 routeDto.TotalDurations = route.TotalDuration;
@@ -218,9 +179,9 @@ namespace MRT.Services
                 {
                     if (current.PrevStation == null)
                     {
-                        string instruction = string.Format("Take {0} line from {1} to {2}", curActiveLine,
-                            current.Station.StationName, lastUpdatedStation.StationName);
-                        routeDto.Instructions.Add(instruction);
+                        //string instruction = string.Format("Take {0} line from {1} to {2}", curActiveLine,
+                        //    current.Station.StationName, lastUpdatedStation.StationName);
+                        //routeDto.Instructions.Add(instruction);
                         break;
                     }
                     else if (!current.PrevStation.Station.IsInterchange)
@@ -233,8 +194,8 @@ namespace MRT.Services
                             string transitInstruction = string.Format("Change from {0} line to {1} line", curLine, prevLine);
                             string forwardInstruction = string.Format("Take {0} line from {1} to {2}", curLine,
                                 lastUpdatedStation.StationName, nextStation.StationName);
-                            routeDto.Instructions.Add(transitInstruction);
                             routeDto.Instructions.Add(forwardInstruction);
+                            routeDto.Instructions.Add(transitInstruction);
                         }
                         string instruction = string.Format("Take {0} line from {1} to {2}", curLine, prevStation.StationName, current.Station.StationName);
                         routeDto.Instructions.Add(instruction);

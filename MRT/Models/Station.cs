@@ -10,7 +10,7 @@ namespace MRT.Models
         public bool IsInterchange { get; set; }
         public DateTime CommencementDate { get; set; }
         public List<StationEdge> ConnectedStations { get; set; }
-        public HashSet<string> AlternativeStationCodes { get; set; }
+        public List<string> AlternativeStationCodes { get; set; }
         
         public Station(){}
 
@@ -19,22 +19,8 @@ namespace MRT.Models
             StationName = stationName;
             CommencementDate = commencementDate;
             IsInterchange = false;
-            AlternativeStationCodes = new HashSet<string>(); 
-        }
-
-        public void AddConnectedStations(StationEdge stationEdge) {
-            if (ConnectedStations == null) {
-                ConnectedStations = new List<StationEdge>(); 
-            }
-            ConnectedStations.Add(stationEdge);
-        }
-
-        public void SetIsInterchange() {
-            IsInterchange = true; 
-        }
-
-        public string GetMrtLine() {
-            return StationCode.Substring(0, 2); 
+            AlternativeStationCodes = new List<string>();
+            ConnectedStations = new List<StationEdge>();
         }
 
         public string GetStationCodeByMrtLine(string mrtLine)

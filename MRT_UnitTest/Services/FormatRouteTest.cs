@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using MRT.Services;
+using MRT.Models;
 using System.Collections.Generic;
 using System;
 
@@ -141,14 +142,49 @@ namespace MRT_UnitTest.Services
         }
 
         [Test]
-        public void TestFormatRoutes_NoPossibleRoute() {
-
+        public void TestFormatRoutes_NoPossibleRoute()
+        {
+            var routes = _searchStationService.FormatRoutes(new List<Route>());
+            Assert.IsNull(routes);
         }
 
         [Test]
         public void TestFormatRoutes_HasPossibleRoute()
         {
+            var clementi = new Station
+            {
+                StationCode = "EW23",
+                StationName = "Clementi",
+                IsInterchange = false,
+                AlternativeStationCodes = new List<string> { "EW23" }
+            };
+            var dover = new Station
+            {
+                StationCode = "EW22",
+                StationName = "Dover",
+                IsInterchange = false,
+                AlternativeStationCodes = new List<string> { "EW22" }
+            };
+            var routes = _searchStationService.FormatRoutes(new List<Route> {
+                new Route {
+                    TotalDuration = 5,
+                    LastStation = new RouteStation {
+                        Station = clementi,
+                        PrevStation = new RouteStation {
+                            Station = dover
+                        }
+                    }
+                }
 
+            });
+            Assert.IsNotNull(routes);
+
+            Assert.AreEqual(routes[0].Instructions, new List<string> {
+                "Take EW from Dover to Clementi"
+                });
+            Assert.AreEqual(routes[0].RouteStations, new List<string> { "EW22", "EW23" });
+            Assert.AreEqual(5, routes[0].TotalDurations);
+            Assert.AreEqual(2, routes[0].TotalStations);
         }
     }
 }

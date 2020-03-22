@@ -224,10 +224,10 @@ namespace MRT.Services
             return routeDTO;
         }
 
-        public HashSet<string> GetMatchingLines(HashSet<string> prevStationLines, HashSet<string> nextStationLines)
+        public HashSet<string> GetMatchingLines(List<string> prevStationCodes, List<string> nextStationCodes)
         {
-            HashSet<string> commonStationLines = new HashSet<string>(prevStationLines);
-            commonStationLines.IntersectWith(nextStationLines);
+            HashSet<string> commonStationLines = new HashSet<string>(prevStationCodes.Select(x=> x.Substring(0,2)));
+            commonStationLines.IntersectWith(nextStationCodes.Select(x=> x.Substring(0,2)));
             return commonStationLines;
         }
 
@@ -264,23 +264,23 @@ namespace MRT.Services
                         {
                             station = new Station(stationCode, stationName, commencementDate);
                             Stations.Add(stationName, station);
-                            station.AlternativeStationCodes.Add(stationCode.Substring(0, 2));
+                            station.AlternativeStationCodes.Add(stationCode);
                         }
                         else
                         {
                             station = Stations[stationName];
-                            station.SetIsInterchange();
-                            station.AlternativeStationCodes.Add(stationCode.Substring(0, 2));
+                            station.IsInterchange = true;
+                            station.AlternativeStationCodes.Add(stationCode);
                         }
 
                         if (prevStation != null && (prevStationLine == "" || prevStationLine == stationLine))
                         {
                             //TODO: make the weight different
                             StationEdge prevStationEdge = new StationEdge(station, Consts.WEIGHT);
-                            prevStation.AddConnectedStations(prevStationEdge);
+                            prevStation.ConnectedStations.Add(prevStationEdge);
 
                             StationEdge curStationEdge = new StationEdge(prevStation, Consts.WEIGHT);
-                            station.AddConnectedStations(curStationEdge);
+                            station.ConnectedStations.Add(curStationEdge);
                         }
 
                         if (prevStation != null && prevStationLine != "" && prevStationLine != stationLine)

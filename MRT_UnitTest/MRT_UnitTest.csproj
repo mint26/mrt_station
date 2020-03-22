@@ -19,6 +19,7 @@
   <ItemGroup>
     <Folder Include="Services\" />
     <Folder Include="Datasets\" />
+    <Folder Include="Models\" />
   </ItemGroup>
     <ItemGroup>
     <Content Include="Datasets\*.*">

@@ -98,18 +98,16 @@ namespace MRT_UnitTest.Services
         public void TestThreeLineRoute4()
         {
             var route = _searchStationService.FindKShortestPath("Marymount", "Dhoby Ghaut", 3);
-            var expected = new String[]{"Dhoby Ghaut", "Little India", "Newton", "Stevens", "Botanic Gardens", "Caldecott", "Marymount"};
+            var expected = new String[]{"Dhoby Ghaut", "Little India", "Newton", "Stevens", "Mount Pleasant", "Caldecott", "Marymount"};
+            Console.WriteLine("----------------------------------------");
             TestUtility.PrintRoute(route[0]);
+            Console.WriteLine("----------------------------------------");
+            TestUtility.PrintRoute(route[1]);
+            Console.WriteLine("----------------------------------------");
+            TestUtility.PrintRoute(route[2]);
             Assert.IsTrue(TestUtility.IsSameRoute(expected, route[0]));
         }
 
-        [Test]
-        public void TestThreeLineRoute5()
-        {
-            var route = _searchStationService.FindKShortestPath("Tanjong Pagar", "Promenade", 3);
-            TestUtility.PrintRoute(route[0]);
 
-            // var instructions = _searchStationService.FormatRouteToRouteDTO(route[0]);
-        }
     }
 }

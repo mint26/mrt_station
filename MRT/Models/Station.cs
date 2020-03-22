@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 namespace MRT.Models
 {
     public class Station
@@ -8,37 +9,38 @@ namespace MRT.Models
         public string StationName { get; set; }
         public bool IsInterchange { get; set; }
         public DateTime CommencementDate { get; set; }
-        public IList<StationEdge> ConnectedStations { get; set; }
-        public IList<string> AlternativeStationCodes { get; set; }
+        public List<StationEdge> ConnectedStations { get; set; }
+        public HashSet<string> AlternativeStationCodes { get; set; }
         
         public Station(){}
 
         public Station(string stationCode, string stationName, DateTime commencementDate) {
-            this.StationCode = stationCode;
-            this.StationName = stationName;
-            this.CommencementDate = commencementDate;
-            this.IsInterchange = false;
-            this.AlternativeStationCodes = new List<string>(); 
+            StationCode = stationCode;
+            StationName = stationName;
+            CommencementDate = commencementDate;
+            IsInterchange = false;
+            AlternativeStationCodes = new HashSet<string>(); 
         }
 
         public void AddConnectedStations(StationEdge stationEdge) {
-            if (this.ConnectedStations == null) {
-                this.ConnectedStations = new List<StationEdge>(); 
+            if (ConnectedStations == null) {
+                ConnectedStations = new List<StationEdge>(); 
             }
-            this.ConnectedStations.Add(stationEdge);
+            ConnectedStations.Add(stationEdge);
         }
 
         public void SetIsInterchange() {
-            this.IsInterchange = true; 
+            IsInterchange = true; 
         }
 
         public string GetMrtLine() {
-            return this.StationCode.Substring(0, 2); 
+            return StationCode.Substring(0, 2); 
         }
 
         public string GetStationCodeByMrtLine(string mrtLine)
         {
-            foreach (string s in this.AlternativeStationCodes)
+            if (mrtLine == null) return AlternativeStationCodes.First();
+            foreach (string s in AlternativeStationCodes)
             {
                 if (s.Contains(mrtLine))
                 {

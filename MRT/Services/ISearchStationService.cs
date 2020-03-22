@@ -2,71 +2,49 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using MRT.Models; 
+using MRT.Models;
+using MRT.Models.DTOs;
+using MRT.Constants;
+using System.Threading.Tasks;
+
 namespace MRT.Services
 {
-    public interface ISearchStationService {
-        IList<RouteDTO> GetRoutes(string sourceStationCode, string destStationCode, DateTime searchTime);
-        void ImportDataset(string filepath, DateTime atDate);
-        IList<RouteDTO> FormatRoutes(IList<Route> possibleRoutes, string destStationCode);
+    public interface ISearchStationService
+    {
+        Task<List<RouteDTO>> GetRoutesAsync(string sourceStationCode, string destStationCode, DateTime searchTime);
     }
 
-    public class RouteDTO
+    public class SearchStationService : ISearchStationService
     {
-        public List<string> Instructions { get; set; }
-        public List<string> RouteStations { get; set; }
-        public int TotalDurations { get; set; }
-        public int TotalStations { get; set; }
-        public RouteDTO() {
-            this.Instructions = new List<string>();
-            this.TotalDurations = 0; 
-        }
-    }
+        public Dictionary<string, Station> Stations { get; set; }
+        public Dictionary<string, string> StationCodeMapping { get; set; }
 
-    public class SearchStationService: ISearchStationService
-    {
-        private Dictionary<string, Station> _stations;
-        private Dictionary<string, string> _stationCodeMapping;
-
-        private const string FILEPATH = "./Datasets/StationMap.csv";
-        private const int MAX_NUM_RESULT = 3;
-
-        private const string CHANGE_LINE_FORMAT = "Change from {0} line to {1} line";
-        private const string GO_TO_NEXT_STATION_FORMAT = "Take {0} from {1} to {2}";
-
-        public Dictionary<string, Station> Stations {
-            get => _stations;
-            set => _stations = value; 
-        }
-
-        public Dictionary<string, string> StationCodeMapping
+        public async Task<List<RouteDTO>> GetRoutesAsync(string sourceStationCode, string destStationCode, DateTime searchDate)
         {
-            get => _stationCodeMapping;
-            set => _stationCodeMapping = value;
-        }
 
-        public IList<RouteDTO> GetRoutes(string sourceStationCode, string destStationCode, DateTime searchDate) {
+            await ImportDataset(Consts.FILEPATH, searchDate);
 
-            ImportDataset(FILEPATH, searchDate);
-
+            if (!StationCodeMapping.ContainsKey(sourceStationCode) || !StationCodeMapping.ContainsKey(destStationCode)) {
+                return null;
+            }
             string sourceName = StationCodeMapping[sourceStationCode];
             string destName = StationCodeMapping[destStationCode];
-            IList<Route> possibleRoutes = FindKShortestPath(sourceName, destName, MAX_NUM_RESULT);
+            List<Route> possibleRoutes = FindKShortestPath(sourceName, destName, Consts.MAX_NUM_RESULT);
 
-            return FormatRoutes(possibleRoutes, destStationCode); 
+            return FormatRoutes(possibleRoutes);
         }
 
-        public IList<Route> FindKShortestPath(string sourceStationName, string destStationName, int k) {
-            if (!Stations.ContainsKey(sourceStationName)) throw new Exception();
+        public List<Route> FindKShortestPath(string sourceStationName, string destStationName, int k)
+        {
 
             List<Route> kRoutes = new List<Route>();
- 
+
             Queue<Station> stationQueue = new Queue<Station>();
             HashSet<string> visitedStationName = new HashSet<string>();
             Station curStation = Stations[sourceStationName];
             stationQueue.Enqueue(curStation);
 
-            IList<Route> possibleRoutes = new List<Route>();
+            List<Route> possibleRoutes = new List<Route>();
             Route startRoute = new Route();
             startRoute.AddStationToRoute(curStation);
             possibleRoutes.Add(startRoute);
@@ -77,27 +55,27 @@ namespace MRT.Services
 
                 curStation = stationQueue.Dequeue();
                 List<Route> updatedRoutes = new List<Route>();
-                
 
                 foreach (StationEdge stationEdge in curStation.ConnectedStations)
                 {
                     Station connectedStation = stationEdge.Station;
-                    
+
                     if (connectedStation.StationName == destStationName && kRoutes.Count < k)
                     {
-                        IList<Route> validRoutes = SpawnValidRoute(possibleRoutes, curStation.StationName, connectedStation, stationEdge.Duration);
+                        List<Route> validRoutes = SpawnValidRoute(possibleRoutes, curStation.StationName, connectedStation, stationEdge.Duration);
                         int availableRouteSlots = k - kRoutes.Count < validRoutes.Count ? k - kRoutes.Count : validRoutes.Count;
-                        for (int i = 0; i < availableRouteSlots; i++) {
+                        for (int i = 0; i < availableRouteSlots; i++)
+                        {
                             kRoutes.Add(validRoutes[i]);
-                            possibleRoutes.Remove(validRoutes[i]); 
+                            possibleRoutes.Remove(validRoutes[i]);
                         }
 
                         if (kRoutes.Count >= k)
                         {
                             foundKRoutes = true;
-                            break; 
+                            break;
                         }
-                        continue; 
+                        continue;
                     }
                     if (!visitedStationName.Contains(connectedStation.StationName))
                     {
@@ -107,20 +85,23 @@ namespace MRT.Services
                     }
                 }
 
-                if (updatedRoutes.Count > 0) {
+                if (updatedRoutes.Count > 0)
+                {
                     updatedRoutes.AddRange(SpawnMismatchedRoute(possibleRoutes, curStation.StationName));
                     possibleRoutes = updatedRoutes;
                 }
             }
 
-            kRoutes.Sort((Route r1,Route r2) => { return r1.TotalDuration - r2.TotalDuration; });
-            return kRoutes; 
+            kRoutes = kRoutes.OrderBy(route => route.TotalDuration).ToList();
+            return kRoutes;
         }
 
-        public IList<Route> SpawnMatchedRoute(IList<Route> possibleRoutes, string prevStationName, Station stationToAdd, int duration) {
-            IList<Route> newRoutes = new List<Route>();
+        public List<Route> SpawnMatchedRoute(List<Route> possibleRoutes, string prevStationName, Station stationToAdd, int duration)
+        {
+            List<Route> newRoutes = new List<Route>();
 
-            foreach (Route route in possibleRoutes) {
+            foreach (Route route in possibleRoutes)
+            {
                 if (route.LastStation.Station.StationName == prevStationName)
                 {
                     Route updatedRoute = (Route)route.Clone();
@@ -130,12 +111,12 @@ namespace MRT.Services
                 }
             }
 
-            return newRoutes; 
+            return newRoutes;
         }
 
-        public IList<Route> SpawnMismatchedRoute(IList<Route> possibleRoutes, string prevStationName)
+        public List<Route> SpawnMismatchedRoute(List<Route> possibleRoutes, string prevStationName)
         {
-            IList<Route> newRoutes = new List<Route>();
+            List<Route> newRoutes = new List<Route>();
 
             foreach (Route route in possibleRoutes)
             {
@@ -148,9 +129,9 @@ namespace MRT.Services
             return newRoutes;
         }
 
-        public IList<Route> SpawnValidRoute(IList<Route> possibleRoutes, string lastStationName, Station finalStation, int duration)
+        public List<Route> SpawnValidRoute(List<Route> possibleRoutes, string lastStationName, Station finalStation, int duration)
         {
-            IList<Route> validRoutes = new List<Route>();
+            List<Route> validRoutes = new List<Route>();
 
             foreach (Route route in possibleRoutes)
             {
@@ -163,42 +144,48 @@ namespace MRT.Services
             }
             return validRoutes;
         }
-            
-        public IList<RouteDTO> FormatRoutes(IList<Route> possibleRoutes, string destStationCode) {
-            if (possibleRoutes == null || possibleRoutes.Count == 0) {
-                return null; 
+
+        public List<RouteDTO> FormatRoutes(List<Route> possibleRoutes)
+        {
+            if (possibleRoutes == null || possibleRoutes.Count == 0)
+            {
+                return null;
             }
-            IList<RouteDTO> routeDTOs = new List<RouteDTO>();
+            List<RouteDTO> routeDTOs = new List<RouteDTO>();
             foreach (Route route in possibleRoutes)
             {
-                routeDTOs.Add(FormatRouteToRouteDTO(route, destStationCode)); 
+                routeDTOs.Add(FormatRouteToRouteDTO(route));
             }
 
-            return routeDTOs; 
+            return routeDTOs;
         }
 
-        public RouteDTO FormatRouteToRouteDTO(Route route, string destStationCode) {
+        public RouteDTO FormatRouteToRouteDTO(Route route)
+        {
             RouteDTO routeDTO = new RouteDTO();
             RouteStation cur = route.LastStation;
-            string prevLine = destStationCode.Substring(0,2);
+            string prevLine = null;
             Stack<string> instructionStack = new Stack<string>();
             Stack<string> routeStationCodes = new Stack<string>();
-            int numStations = 0; 
+            int numStations = 0;
 
-            while (cur != null) {
+            while (cur != null)
+            {
                 RouteStation prevStation = cur.PrevStation;
-                if (prevStation != null) {
-                    List<string> matchingLines = GetMatchingLines(cur.Station.AlternativeStationCodes, prevStation.Station.AlternativeStationCodes);
+                if (prevStation != null)
+                {
+                    HashSet<string> matchingLines = GetMatchingLines(cur.Station.AlternativeStationCodes, prevStation.Station.AlternativeStationCodes);
                     if (matchingLines.Count == 1)
                     {
-                        if (prevLine != null && prevLine != matchingLines[0])
+                        string matchedLine = matchingLines.First();
+                        if (prevLine != null && prevLine != matchedLine)
                         {
-                            instructionStack.Push(string.Format(CHANGE_LINE_FORMAT, matchingLines[0], prevLine));
+                            instructionStack.Push(string.Format(Consts.CHANGE_LINE_FORMAT, matchedLine, prevLine));
                         }
-                        instructionStack.Push(string.Format(GO_TO_NEXT_STATION_FORMAT, matchingLines[0], prevStation.Station.StationName,
+                        instructionStack.Push(string.Format(Consts.GO_TO_NEXT_STATION_FORMAT, matchedLine, prevStation.Station.StationName,
                         cur.Station.StationName));
 
-                        prevLine = matchingLines[0];
+                        prevLine = matchedLine;
                     }
                     else
                     {
@@ -206,21 +193,22 @@ namespace MRT.Services
                         {
                             if (line == prevLine)
                             {
-                                instructionStack.Push(string.Format(GO_TO_NEXT_STATION_FORMAT, prevLine, prevStation.Station.StationName,
+                                instructionStack.Push(string.Format(Consts.GO_TO_NEXT_STATION_FORMAT, prevLine, prevStation.Station.StationName,
                                 cur.Station.StationName));
                             }
                         }
                     }
                 }
-                routeStationCodes.Push(cur.Station.GetStationCodeByMrtLine(prevLine)); 
+                routeStationCodes.Push(cur.Station.GetStationCodeByMrtLine(prevLine));
                 cur = cur.PrevStation;
-                numStations++; 
+                numStations++;
             }
 
 
             List<string> instructions = new List<string>();
-            while (instructionStack.Count > 0) {
-                instructions.Add(instructionStack.Pop()); 
+            while (instructionStack.Count > 0)
+            {
+                instructions.Add(instructionStack.Pop());
             }
 
             List<string> routeStations = new List<string>();
@@ -233,43 +221,41 @@ namespace MRT.Services
             routeDTO.TotalStations = numStations;
             routeDTO.RouteStations = routeStations;
 
-            return routeDTO; 
+            return routeDTO;
         }
 
-        public List<string> GetMatchingLines(IList<string> prevStationLines, IList<string> nextStationLines) {
-            List<string> matchingLines = new List<string>(); 
-            for (int i = 0; i < prevStationLines.Count; i++) {
-                string prevLine = prevStationLines[i].Substring(0, 2);
-                for (int j = 0; j < nextStationLines.Count; j++) {
-                    string nextLine = nextStationLines[j].Substring(0, 2); 
-                    if ( prevLine == nextLine) {
-                        matchingLines.Add(nextLine); 
-                    }
-                }
-            }
-            return matchingLines; 
+        public HashSet<string> GetMatchingLines(HashSet<string> prevStationLines, HashSet<string> nextStationLines)
+        {
+            HashSet<string> commonStationLines = new HashSet<string>(prevStationLines);
+            commonStationLines.IntersectWith(nextStationLines);
+            return commonStationLines;
         }
 
-        public void ImportDataset(string filepath,DateTime atDate) {
+        public async Task ImportDataset(string filepath, DateTime atDate)
+        {
 
             StationCodeMapping = new Dictionary<string, string>();
-            Stations = new Dictionary<string, Station>(); 
-            using (StreamReader sr = new StreamReader(filepath)) 
+            Stations = new Dictionary<string, Station>();
+
+
+            using (StreamReader sr = new StreamReader(filepath))
             {
-                String line = sr.ReadLine();
+                string line = await sr.ReadLineAsync();
 
                 Station prevStation = null;
-                string prevStationLine = ""; 
+                string prevStationLine = "";
                 while ((line = sr.ReadLine()) != null)
                 {
                     string[] parts = line.Split(',');
                     string stationCode = parts[0];
                     string stationName = parts[1];
+
                     string stationLine = stationCode.Substring(0, 2);
                     DateTime commencementDate = DateTime.Parse(parts[2]);
                     if (commencementDate <= atDate)
                     {
-                        if (!StationCodeMapping.ContainsKey(stationCode)) {
+                        if (!StationCodeMapping.ContainsKey(stationCode))
+                        {
                             StationCodeMapping.Add(stationCode, stationName);
                         }
 
@@ -278,35 +264,39 @@ namespace MRT.Services
                         {
                             station = new Station(stationCode, stationName, commencementDate);
                             Stations.Add(stationName, station);
-                            station.AlternativeStationCodes.Add(stationCode); 
+                            station.AlternativeStationCodes.Add(stationCode.Substring(0, 2));
                         }
-                        else {
+                        else
+                        {
                             station = Stations[stationName];
                             station.SetIsInterchange();
-                            station.AlternativeStationCodes.Add(stationCode);
+                            station.AlternativeStationCodes.Add(stationCode.Substring(0, 2));
                         }
 
-                        if (prevStation != null && (prevStationLine == "" || prevStationLine == stationLine)) {
+                        if (prevStation != null && (prevStationLine == "" || prevStationLine == stationLine))
+                        {
                             //TODO: make the weight different
-                            StationEdge prevStationEdge = new StationEdge(station, 5);
+                            StationEdge prevStationEdge = new StationEdge(station, Consts.WEIGHT);
                             prevStation.AddConnectedStations(prevStationEdge);
 
-                            StationEdge curStationEdge = new StationEdge(prevStation, 5);
+                            StationEdge curStationEdge = new StationEdge(prevStation, Consts.WEIGHT);
                             station.AddConnectedStations(curStationEdge);
                         }
 
-                        if (prevStation != null && prevStationLine != "" && prevStationLine != stationLine) {
+                        if (prevStation != null && prevStationLine != "" && prevStationLine != stationLine)
+                        {
                             prevStation = null;
                             prevStationLine = "";
-                            continue; 
+                            continue;
                         }
 
                         prevStation = station;
-                        prevStationLine = stationLine; 
+                        prevStationLine = stationLine;
 
                     }
                 }
             }
-        }   
+        }
     }
 }
+

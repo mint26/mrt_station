@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace MRT.Models
 {
@@ -7,8 +6,8 @@ namespace MRT.Models
     {
         public Route()
         {
-            this.TotalDuration = 0;
-            this.LastStation = null;
+            TotalDuration = 0;
+            LastStation = null;
         }
 
         public RouteStation LastStation { get; set; }
@@ -18,19 +17,19 @@ namespace MRT.Models
 
             RouteStation newRouteStation = new RouteStation(station);
 
-            if (this.LastStation == null) {
-                this.LastStation = newRouteStation;
+            if (LastStation == null) {
+                LastStation = newRouteStation;
                 return; 
             }
-            if (this.LastStation.Station != null) {
-                this.LastStation.NextStation = newRouteStation;
-                newRouteStation.PrevStation = this.LastStation; 
-                this.LastStation = newRouteStation; 
+            if (LastStation.Station != null) {
+                LastStation.NextStation = newRouteStation;
+                newRouteStation.PrevStation = LastStation; 
+                LastStation = newRouteStation; 
             } 
         }
 
         public void AddTotalDuration(int duration) {
-            this.TotalDuration += duration; 
+            TotalDuration += duration; 
         }
 
         public virtual object Clone()
@@ -38,26 +37,13 @@ namespace MRT.Models
             return new Route()
             {
                 LastStation = new RouteStation {
-                    NextStation = this.LastStation.NextStation,
-                    PrevStation = this.LastStation.PrevStation,
-                    Station = this.LastStation.Station, 
+                    NextStation = LastStation.NextStation,
+                    PrevStation = LastStation.PrevStation,
+                    Station = LastStation.Station, 
                 },
-                TotalDuration = this.TotalDuration,
-                
+                TotalDuration = TotalDuration,
             };
         }
 
-    }
-
-    public class RouteStation {
-        public RouteStation() { }
-        public RouteStation(Station station) {
-            this.Station = station;
-            this.NextStation = null; 
-        }
-
-        public Station Station { get; set; }
-        public RouteStation NextStation { get; set; }
-        public RouteStation PrevStation { get; set; }
     }
 }

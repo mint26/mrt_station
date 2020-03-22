@@ -27,8 +27,16 @@
   </ItemGroup>
     <ItemGroup>
       <Content Remove="Datasets\TestDataset.json" />
+      <Content Remove="Datasets\TestDataset_1.json" />
     </ItemGroup>
     <ItemGroup>
       <None Remove="Datasets\TestDataset.json" />
+      <None Remove="Services\StationMap.csv" />
+      <None Remove="Datasets\TestDataset_1.json" />
+      <None Remove="Datasets\StationMap.csv" />
+    </ItemGroup>
+    <ItemGroup>
+      <Compile Remove="Services\ShortestPathIntegrationTest.cs" />
+      <Compile Remove="UnitTest1.cs" />
     </ItemGroup>
 </Project>

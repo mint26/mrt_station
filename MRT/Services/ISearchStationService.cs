@@ -30,14 +30,9 @@ namespace MRT.Services
 
         private const string FILEPATH = "./Datasets/StationMap.csv";
         private const int MAX_NUM_RESULT = 3;
-        private Route lastMaxRoute = null;
 
         private const string CHANGE_LINE_FORMAT = "Change from {0} line to {1} line";
         private const string GO_TO_NEXT_STATION_FORMAT = "Take {0} from {1} to {2}";
-
-        public SearchStationService()
-        {
-        }
 
         public Dictionary<string, Station> Stations {
             get => _stations;
@@ -117,6 +112,8 @@ namespace MRT.Services
                     possibleRoutes = updatedRoutes;
                 }
             }
+
+            kRoutes.Sort((Route r1,Route r2) => { return r1.TotalDuration - r2.TotalDuration; });
             return kRoutes; 
         }
 

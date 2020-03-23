@@ -35,12 +35,6 @@ namespace MRT_UnitTest.Services
         }
 
         [Test]
-        public void TestFindKShortestPath_NoRoute()
-        {
-            Assert.Pass();
-        }
-
-        [Test]
         public void TestFindKShortestPath_GreenRedLineRoute()
         {
             var route = searchStationService.FindKShortestPath("Lakeside", "Yew Tee", 3);
@@ -101,6 +95,18 @@ namespace MRT_UnitTest.Services
         {
             var route = searchStationService.FindKShortestPath("Marymount", "Dhoby Ghaut", 3);
             var expected = new String[] { "Dhoby Ghaut", "Little India", "Newton", "Stevens", "Mount Pleasant", "Caldecott", "Marymount" };
+            TestUtility.PrintRoute(route[0]);
+            TestUtility.PrintRoute(route[1]);
+            TestUtility.PrintRoute(route[2]);
+            Assert.IsTrue(TestUtility.IsSameRoute(expected, route[0]));
+        }
+
+        [Test]
+        public void TestFindKShortestPath_DestInterchange_BukitGombakToDhobyGhaut()
+        {
+            var route = searchStationService.FindKShortestPath("Bukit Gombak", "City Hall", 3);
+            var expected = new String[] { "City Hall","Raffles Place","Tanjong Pagar","Outram Park","Tiong Bahru" ,"Redhill",
+            "Queenstown", "Commonwealth","Buona Vista","Dover","Clementi","Jurong East","Bukit Batok", "Bukit Gombak"};
             TestUtility.PrintRoute(route[0]);
             TestUtility.PrintRoute(route[1]);
             TestUtility.PrintRoute(route[2]);

@@ -22,7 +22,7 @@ namespace MRT_UnitTest.Services
             while(current != null) {
                 if (current.PrevStation != null)
                 {
-                    Console.Write(" -> {0} ", current.Station.StationName);
+                    Console.Write(" {0} --> ", current.Station.StationName);
                 }
                 else
                 {

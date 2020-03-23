@@ -7,6 +7,8 @@ namespace MRT.Models.DTOs
         public List<string> RouteStations { get; set; }
         public int TotalDurations { get; set; }
         public int TotalStations { get; set; }
+        public string SourceStationName { get; set; }
+        public string DestStationName { get; set; }
         public RouteDTO()
         {
             Instructions = new List<string>();

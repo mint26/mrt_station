@@ -60,6 +60,7 @@ namespace MRT.Services
                 {
                     Station connectedStation = stationEdge.Station;
 
+                    //valid route found. 
                     if (connectedStation.StationName == destStationName && kRoutes.Count < k)
                     {
                         List<Route> validRoutes = SpawnValidRoute(possibleRoutes, curStation.StationName, connectedStation, stationEdge.Duration);
@@ -77,6 +78,7 @@ namespace MRT.Services
                         }
                         continue;
                     }
+                    
                     if (!visitedStationName.Contains(connectedStation.StationName))
                     {
                         visitedStationName.Add(curStation.StationName);
@@ -96,6 +98,7 @@ namespace MRT.Services
             return kRoutes;
         }
 
+        // Find the route with matching last station name and extend with new station name. 
         public List<Route> SpawnMatchedRoute(List<Route> possibleRoutes, string prevStationName, Station stationToAdd, int duration)
         {
             List<Route> newRoutes = new List<Route>();
@@ -114,6 +117,7 @@ namespace MRT.Services
             return newRoutes;
         }
 
+        // Find the route with no matching last station name
         public List<Route> SpawnMismatchedRoute(List<Route> possibleRoutes, string prevStationName)
         {
             List<Route> newRoutes = new List<Route>();
@@ -129,6 +133,7 @@ namespace MRT.Services
             return newRoutes;
         }
 
+        //Find the final route with matching last station name
         public List<Route> SpawnValidRoute(List<Route> possibleRoutes, string lastStationName, Station finalStation, int duration)
         {
             List<Route> validRoutes = new List<Route>();
@@ -164,6 +169,7 @@ namespace MRT.Services
         {
             RouteDTO routeDTO = new RouteDTO();
             RouteStation cur = route.LastStation;
+            routeDTO.DestStationName = cur.Station.StationName; 
             string prevLine = null;
             Stack<string> instructionStack = new Stack<string>();
             Stack<string> routeStationCodes = new Stack<string>();
@@ -175,9 +181,11 @@ namespace MRT.Services
                 if (prevStation != null)
                 {
                     HashSet<string> matchingLines = GetMatchingLines(cur.Station.AlternativeStationCodes, prevStation.Station.AlternativeStationCodes);
+                    //mrt line for this station can be determined
                     if (matchingLines.Count == 1)
                     {
                         string matchedLine = matchingLines.First();
+                        //if mrt line for the determined station is not the same as prev mrt line
                         if (prevLine != null && prevLine != matchedLine)
                         {
                             instructionStack.Push(string.Format(Consts.CHANGE_LINE_FORMAT, matchedLine, prevLine));
@@ -189,8 +197,12 @@ namespace MRT.Services
                     }
                     else
                     {
+                        //if there is more than 1 possible mrt line
                         foreach (string line in matchingLines)
                         {
+                            if (prevLine == null) {
+                                prevLine = cur.Station.AlternativeStationCodes.First().Substring(0, 2); 
+                            }
                             if (line == prevLine)
                             {
                                 instructionStack.Push(string.Format(Consts.GO_TO_NEXT_STATION_FORMAT, prevLine, prevStation.Station.StationName,
@@ -200,8 +212,14 @@ namespace MRT.Services
                     }
                 }
                 routeStationCodes.Push(cur.Station.GetStationCodeByMrtLine(prevLine));
+                
+                if (cur.PrevStation == null) {
+                    routeDTO.SourceStationName = cur.Station.StationName;
+                }
+
                 cur = cur.PrevStation;
                 numStations++;
+
             }
 
 
@@ -224,6 +242,7 @@ namespace MRT.Services
             return routeDTO;
         }
 
+        //Get the matching mrt lines(eg: CC, EW, etc) between two list of station codes. 
         public HashSet<string> GetMatchingLines(List<string> prevStationCodes, List<string> nextStationCodes)
         {
             HashSet<string> commonStationLines = new HashSet<string>(prevStationCodes.Select(x=> x.Substring(0,2)));

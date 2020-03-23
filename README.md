@@ -1,5 +1,12 @@
 # Mrt Station
-> Find your route in Singapore MRT station
+> Find shortest K mrt routes in Singapore 
+
+## Assumption
+- System will only return maximum of 3 shortest routes 
+- The distance from 1 station to another station will always be 5. 
+- No extra time added for interchange 
+- If there are two interchange stations that can be change from one line to another with the same interchangeable line, it will always take the last station nearest to the station with only one possible line. 
+- If the source or destination station is interchange, it will just take the first station codes in the list. 
 
 ## Installation
 

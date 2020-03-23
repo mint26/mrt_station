@@ -4,8 +4,8 @@ namespace MRT_UnitTest.Services
 {
     public static class TestUtility
     {
-        public static bool IsSameRoute(string[] expected, Route given) {
-            var current = given.LastStation;
+        public static bool IsSameRoute(string[] expected, Route route) {
+            var current = route.LastStation;
             var isValid = true;
             foreach(var stationName in expected) {
                 if(current == null || stationName != current.Station.StationName) {
